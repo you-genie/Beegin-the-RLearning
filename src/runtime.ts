@@ -13,12 +13,17 @@ async function getPyodide(): Promise<any> {
   pyodidePromise = (async () => {
     const mod = await import(/* @vite-ignore */ `${INDEX_URL}pyodide.mjs`)
     const pyodide = await mod.loadPyodide({ indexURL: INDEX_URL })
-    pyodide.FS.mkdirTree('engine')
-    pyodide.FS.writeFile('engine/__init__.py', '')
-    pyodide.FS.writeFile('engine/bandit.py', banditSrc)
-    pyodide.FS.writeFile('engine/agent.py', agentSrc)
-    pyodide.FS.writeFile('engine/runner.py', runnerSrc)
-    pyodide.runPython("import sys\nif '' not in sys.path:\n    sys.path.insert(0, '')")
+    // 절대경로로 패키지를 쓴다. 상대경로는 mkdirTree/writeFile의 기준 디렉터리가
+    // 어긋나 ENOENT(errno 44)가 난다.
+    const dir = '/home/pyodide/engine'
+    pyodide.FS.mkdirTree(dir)
+    pyodide.FS.writeFile(`${dir}/__init__.py`, '')
+    pyodide.FS.writeFile(`${dir}/bandit.py`, banditSrc)
+    pyodide.FS.writeFile(`${dir}/agent.py`, agentSrc)
+    pyodide.FS.writeFile(`${dir}/runner.py`, runnerSrc)
+    pyodide.runPython(
+      "import sys\nif '/home/pyodide' not in sys.path:\n    sys.path.insert(0, '/home/pyodide')",
+    )
     return pyodide
   })()
   return pyodidePromise
