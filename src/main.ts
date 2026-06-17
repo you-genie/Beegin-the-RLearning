@@ -63,6 +63,7 @@ function loadLevel(index: number) {
   recapBox.className = ''
   recapBox.textContent = ''
   nextBtn.disabled = true
+  nextBtn.textContent = '다음 레벨 →'
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 }
@@ -89,7 +90,14 @@ async function onRun() {
       )}%)`
       recapBox.textContent = lv.recap
       recapBox.className = 'show'
-      nextBtn.disabled = current >= levels.length - 1
+      if (current < levels.length - 1) {
+        nextBtn.disabled = false
+      } else {
+        // 마지막 레벨 클리어 — 다음 챕터는 아직 없음
+        nextBtn.disabled = true
+        nextBtn.textContent = '🎉 챕터 1 완주!'
+        status.textContent += ' — 🎉 챕터 1 완주! 다음 챕터는 준비 중이에요 🐝'
+      }
     } else {
       status.className = 'fail'
       status.textContent = `❌ 아직이에요. 선택률 ${pct}% (기준 ${Math.round(
