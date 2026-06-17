@@ -1,12 +1,14 @@
 import './style.css'
 import { chapter1 } from './levels/chapter1'
+import { chapter2 } from './levels/chapter2'
 import { createEditor } from './monaco'
 import { runTraining, preloadRuntime } from './runtime'
 import { renderBandit } from './renderer'
+import { renderGrid } from './grid_renderer'
 import { isCleared } from './scoring'
 import type { Level } from './types'
 
-const levels: Level[] = chapter1
+const levels: Level[] = [...chapter1, ...chapter2]
 let current = 0
 let hintIndex = 0
 let cancelRender: (() => void) | null = null
@@ -81,13 +83,15 @@ async function onRun() {
       return
     }
     cancelRender?.()
-    cancelRender = renderBandit(canvas, lv, result)
+    cancelRender =
+      lv.engineConfig.env.type === 'grid'
+        ? renderGrid(canvas, lv, result)
+        : renderBandit(canvas, lv, result)
     const pct = Math.round(result.successRate * 100)
+    const threshPct = Math.round(lv.successThreshold * 100)
     if (isCleared(result, lv.successThreshold)) {
       status.className = 'pass'
-      status.textContent = `✅ 클리어! 최고 꽃밭 선택률 ${pct}% (기준 ${Math.round(
-        lv.successThreshold * 100,
-      )}%)`
+      status.textContent = `✅ 클리어! 성공률 ${pct}% (기준 ${threshPct}%)`
       recapBox.textContent = lv.recap
       recapBox.className = 'show'
       if (current < levels.length - 1) {
@@ -95,14 +99,12 @@ async function onRun() {
       } else {
         // 마지막 레벨 클리어 — 다음 챕터는 아직 없음
         nextBtn.disabled = true
-        nextBtn.textContent = '🎉 챕터 1 완주!'
-        status.textContent += ' — 🎉 챕터 1 완주! 다음 챕터는 준비 중이에요 🐝'
+        nextBtn.textContent = '🎉 다 깼어요!'
+        status.textContent += ' — 🎉 마지막 레벨 완주! 다음 챕터는 준비 중이에요 🐝'
       }
     } else {
       status.className = 'fail'
-      status.textContent = `❌ 아직이에요. 선택률 ${pct}% (기준 ${Math.round(
-        lv.successThreshold * 100,
-      )}%) — 보상을 다시 손봐요.`
+      status.textContent = `❌ 아직이에요. 성공률 ${pct}% (기준 ${threshPct}%) — 보상을 다시 손봐요.`
     }
   } finally {
     runBtn.disabled = false

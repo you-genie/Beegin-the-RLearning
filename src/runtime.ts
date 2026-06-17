@@ -1,6 +1,8 @@
 import type { EngineConfig, EngineResult } from './types'
 import banditSrc from '../engine/bandit.py?raw'
 import agentSrc from '../engine/agent.py?raw'
+import gridworldSrc from '../engine/gridworld.py?raw'
+import qAgentSrc from '../engine/q_agent.py?raw'
 import runnerSrc from '../engine/runner.py?raw'
 
 const PYODIDE_VERSION = 'v0.27.2'
@@ -20,6 +22,8 @@ async function getPyodide(): Promise<any> {
     pyodide.FS.writeFile(`${dir}/__init__.py`, '')
     pyodide.FS.writeFile(`${dir}/bandit.py`, banditSrc)
     pyodide.FS.writeFile(`${dir}/agent.py`, agentSrc)
+    pyodide.FS.writeFile(`${dir}/gridworld.py`, gridworldSrc)
+    pyodide.FS.writeFile(`${dir}/q_agent.py`, qAgentSrc)
     pyodide.FS.writeFile(`${dir}/runner.py`, runnerSrc)
     pyodide.runPython(
       "import sys\nif '/home/pyodide' not in sys.path:\n    sys.path.insert(0, '/home/pyodide')",

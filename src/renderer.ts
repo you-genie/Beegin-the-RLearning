@@ -1,4 +1,4 @@
-import type { Level, EngineResult, Snapshot } from './types'
+import type { Level, EngineResult, BanditSnapshot } from './types'
 
 /**
  * 밴딧 결과를 캔버스에 애니메이션으로 그린다.
@@ -11,12 +11,15 @@ export function renderBandit(
   result: EngineResult,
 ): () => void {
   const ctx = canvas.getContext('2d')!
-  const arms = level.engineConfig.env.arms
-  const frames = result.history
+  const env = level.engineConfig.env
+  if (env.type !== 'bandit') return () => {}
+  const arms = env.arms
+  const bestArm = result.bestArm ?? -1
+  const frames = result.history as BanditSnapshot[]
   let i = 0
   let timer = 0
 
-  function drawFrame(snap: Snapshot) {
+  function drawFrame(snap: BanditSnapshot) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     const n = arms.length
     const pad = 40
@@ -28,7 +31,7 @@ export function renderBandit(
     for (let a = 0; a < n; a++) {
       const x = pad + a * slot
       const h = (snap.estimates[a] / maxEst) * maxH
-      const isBest = a === result.bestArm
+      const isBest = a === bestArm
       ctx.fillStyle = isBest ? '#ffcf33' : '#7ec8e3'
       ctx.fillRect(x + 12, baseY - h, slot - 24, h)
 
