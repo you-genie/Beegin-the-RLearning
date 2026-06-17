@@ -33,6 +33,9 @@ export const chapter1: Level[] = [
     recap:
       '🎉 방금 만든 건 "보상(reward)" 신호예요. 강화학습 에이전트는 보상을 ' +
       '최대화하도록 행동을 바꿔요. 꿀=보상으로 두니 벌이 알아서 좋은 꽃을 골랐죠!',
+    docs: [
+      { key: 'obs["nectar"]', desc: '이번에 모은 꿀의 양 (실수)' },
+    ],
   },
   {
     id: '1-2', chapter: 1, sublevel: 2,
@@ -69,6 +72,10 @@ export const chapter1: Level[] = [
     recap:
       '🎉 이게 "탐험 vs 활용(exploration/exploitation)"이에요. 당장 좋아 보이는 ' +
       '것만 쓰면(활용) 더 좋은 선택을 놓쳐요. 가끔 새로운 걸 시도(탐험)해야 진짜 최고를 찾죠.',
+    docs: [
+      { key: 'obs["nectar"]', desc: '이번에 모은 꿀의 양 (실수)' },
+      { key: 'obs["arm_pulls"]', desc: '이 꽃을 지금까지 고른 횟수 (정수)' },
+    ],
   },
   {
     id: '1-3', chapter: 1, sublevel: 3,
@@ -102,5 +109,11 @@ export const chapter1: Level[] = [
     recap:
       '🎉 방금 본 게 "보상 해킹(reward hacking)" — 잘못된 보상은 엉뚱한 행동을 낳아요. ' +
       '그리고 이 "여러 선택지 중 최고를 찾는 문제"를 RL에서는 멀티암드 밴딧(multi-armed bandit) 🎰 이라고 불러요!',
+    docs: [
+      { key: 'obs["nectar"]', desc: '이번에 모은 꿀의 양 (실수)' },
+      { key: 'obs["arm"]', desc: '방금 고른 꽃 번호 (0부터)' },
+      { key: 'obs["arm_pulls"]', desc: '이 꽃을 지금까지 고른 횟수 (정수)' },
+      { key: 'obs["total_pulls"]', desc: '지금까지 꽃을 고른 총 횟수 (정수)' },
+    ],
   },
 ]

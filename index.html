@@ -12,19 +12,23 @@
         <span id="game-title">🐝 Beegin the RLearning</span>
         <span id="level-title"></span>
       </header>
+      <nav id="level-nav"></nav>
       <section id="show-panel"></section>
       <main id="workspace">
-        <div id="editor-pane"></div>
+        <div id="left-pane">
+          <div id="editor-pane"></div>
+          <div id="docs-box"></div>
+          <div id="editor-controls">
+            <button id="run-btn">▶ 학습 실행</button>
+            <button id="hint-btn">💡 힌트</button>
+          </div>
+          <div id="hint-box"></div>
+        </div>
         <div id="viz-pane">
           <canvas id="canvas" width="520" height="380"></canvas>
           <div id="status"></div>
-          <div id="controls">
-            <button id="run-btn">▶ 학습 실행</button>
-            <button id="hint-btn">💡 힌트</button>
-            <button id="next-btn" disabled>다음 레벨 →</button>
-          </div>
-          <div id="hint-box"></div>
           <div id="recap-box"></div>
+          <button id="next-btn" disabled>다음 레벨 →</button>
         </div>
       </main>
     </div>

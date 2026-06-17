@@ -3,19 +3,29 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #1e1f29; color
 #topbar { display: flex; gap: 16px; align-items: baseline; padding: 12px 20px; background: #15161e; border-bottom: 1px solid #333; }
 #game-title { font-size: 20px; font-weight: 700; color: #ffcf33; }
 #level-title { font-size: 15px; color: #9fd8ee; }
+#level-nav { display: flex; gap: 8px; padding: 10px 20px; background: #191a23; border-bottom: 1px solid #333; }
+.level-btn { background: #2c2f3c; color: #cfd3e0; border: 1px solid #444; border-radius: 999px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
+.level-btn:hover { background: #383c4c; }
+.level-btn.active { background: #ffcf33; color: #1e1f29; border-color: #ffcf33; font-weight: 700; }
 #show-panel { padding: 14px 20px; background: #23252f; white-space: pre-line; line-height: 1.5; border-bottom: 1px solid #333; }
 #workspace { display: flex; gap: 16px; padding: 16px 20px; align-items: flex-start; }
-#editor-pane { flex: 1; height: 420px; border: 1px solid #333; }
+#left-pane { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+#editor-pane { height: 360px; border: 1px solid #333; }
 #viz-pane { width: 540px; }
 #canvas { background: #11121a; border: 1px solid #333; border-radius: 8px; }
 #status { margin: 10px 0; min-height: 22px; font-size: 15px; }
 #status.pass { color: #5fdc8a; font-weight: 700; }
 #status.fail { color: #ff8c66; }
-#controls { display: flex; gap: 8px; }
+#editor-controls { display: flex; gap: 8px; }
 button { background: #3a3d4d; color: #eee; border: 1px solid #555; border-radius: 6px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
 button:hover:not(:disabled) { background: #4a4e62; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 #run-btn { background: #2e7d4f; border-color: #3fae6e; }
-#hint-box { margin-top: 12px; color: #ffe08a; white-space: pre-line; }
+#next-btn { margin-top: 12px; }
+#docs-box { background: #1a1c26; border: 1px solid #333; border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.6; }
+#docs-box .docs-title { color: #9fd8ee; font-weight: 700; margin-bottom: 6px; }
+#docs-box code { background: #2a2d3a; color: #ffd98a; padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, monospace; }
+#docs-box .docs-desc { color: #b9bdc9; }
+#hint-box { color: #ffe08a; white-space: pre-line; }
 #recap-box { margin-top: 12px; padding: 12px; background: #2a3325; border-radius: 8px; line-height: 1.5; display: none; }
 #recap-box.show { display: block; }

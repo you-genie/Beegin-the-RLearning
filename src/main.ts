@@ -13,6 +13,8 @@ let cancelRender: (() => void) | null = null
 
 const $ = (id: string) => document.getElementById(id)!
 const editorPane = $('editor-pane')
+const docsBox = $('docs-box')
+const levelNav = $('level-nav')
 const canvas = $('canvas') as HTMLCanvasElement
 const status = $('status')
 const hintBox = $('hint-box')
@@ -23,13 +25,38 @@ const nextBtn = $('next-btn') as HTMLButtonElement
 
 const editor = createEditor(editorPane, levels[0].codeTemplate)
 
+// 레벨 네비게이션 버튼 (아무 레벨이나 자유롭게 이동)
+const navButtons: HTMLButtonElement[] = levels.map((lv, i) => {
+  const btn = document.createElement('button')
+  btn.className = 'level-btn'
+  btn.textContent = `Lv ${lv.id}`
+  btn.addEventListener('click', () => loadLevel(i))
+  levelNav.appendChild(btn)
+  return btn
+})
+
+function renderDocs(lv: Level) {
+  const rows = lv.docs
+    .map(
+      (d) =>
+        `<div><code>${d.key}</code> <span class="docs-desc">— ${d.desc}</span></div>`,
+    )
+    .join('')
+  docsBox.innerHTML =
+    `<div class="docs-title">📖 reward(obs) 에서 쓸 수 있는 값</div>${rows}`
+}
+
 function loadLevel(index: number) {
+  current = index
   const lv = levels[index]
   hintIndex = 0
+  hintBtn.disabled = false
   cancelRender?.()
   $('level-title').textContent = `Lv ${lv.id} — ${lv.title}`
   $('show-panel').textContent = lv.showDemo
   editor.setValue(lv.codeTemplate)
+  renderDocs(lv)
+  navButtons.forEach((b, i) => b.classList.toggle('active', i === index))
   status.textContent = ''
   status.className = ''
   hintBox.textContent = ''
@@ -84,11 +111,7 @@ function onHint() {
 }
 
 function onNext() {
-  if (current < levels.length - 1) {
-    current++
-    hintBtn.disabled = false
-    loadLevel(current)
-  }
+  if (current < levels.length - 1) loadLevel(current + 1)
 }
 
 runBtn.addEventListener('click', onRun)

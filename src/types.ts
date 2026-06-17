@@ -34,6 +34,12 @@ export interface EngineResult {
   history: Snapshot[]
 }
 
+/** reward(obs) 안에서 쓸 수 있는 값 하나에 대한 설명. */
+export interface ObsDoc {
+  key: string
+  desc: string
+}
+
 export interface Level {
   id: string
   chapter: number
@@ -45,4 +51,6 @@ export interface Level {
   successThreshold: number
   hints: string[]
   recap: string
+  /** 이 레벨의 reward(obs)에서 쓸 수 있는 obs 키 참고 목록. */
+  docs: ObsDoc[]
 }
