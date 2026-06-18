@@ -17,7 +17,28 @@ let current = 0
 let hintIndex = 0
 let cancelRender: (() => void) | null = null
 let speed = 1
+let iterMult = 1
 const getSpeed = () => speed
+
+// 모든 DOM 이모지를 Twemoji 아이콘으로 교체 (에디터는 건드리지 않음)
+const EMOJI_TARGETS = [
+  'topbar', 'level-nav', 'show-panel', 'docs-box', 'status',
+  'recap-box', 'hint-box', 'legend', 'editor-controls', 'iter-row', 'speed-row',
+]
+function refreshEmoji() {
+  const tw = (window as any).twemoji
+  if (!tw) return
+  for (const id of EMOJI_TARGETS) {
+    const el = document.getElementById(id)
+    if (el) {
+      tw.parse(el, {
+        folder: 'svg',
+        ext: '.svg',
+        base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/',
+      })
+    }
+  }
+}
 
 const LEGEND: Record<string, string> = {
   grid:
@@ -41,10 +62,16 @@ const hintBtn = $('hint-btn') as HTMLButtonElement
 const nextBtn = $('next-btn') as HTMLButtonElement
 const speedInput = $('speed') as HTMLInputElement
 const speedVal = $('speed-val')
+const iterInput = $('iter') as HTMLInputElement
+const iterVal = $('iter-val')
 
 speedInput.addEventListener('input', () => {
   speed = parseFloat(speedInput.value)
   speedVal.textContent = `×${speed.toFixed(2)}`
+})
+iterInput.addEventListener('input', () => {
+  iterMult = parseFloat(iterInput.value)
+  iterVal.textContent = `×${iterMult.toFixed(1)}`
 })
 
 const editor = createEditor(editorPane, levels[0].codeTemplate)
@@ -95,6 +122,7 @@ function loadLevel(index: number) {
     lv.engineConfig.env.type === 'grid'
       ? renderGridInitial(canvas, lv)
       : renderBanditInitial(canvas, lv)
+  refreshEmoji()
 }
 
 async function onRun() {
@@ -102,8 +130,13 @@ async function onRun() {
   runBtn.disabled = true
   status.className = ''
   status.textContent = '⏳ 학습 중... (첫 실행은 Python 로딩에 몇 초 걸려요)'
+  refreshEmoji()
   try {
-    const result = await runTraining(editor.getValue(), lv.engineConfig)
+    // 시행 횟수 슬라이더로 학습량(난이도) 조절
+    const cfg = { ...lv.engineConfig }
+    if (cfg.trainSteps) cfg.trainSteps = Math.round(cfg.trainSteps * iterMult)
+    if (cfg.episodes) cfg.episodes = Math.round(cfg.episodes * iterMult)
+    const result = await runTraining(editor.getValue(), cfg)
     if (!result.ok) {
       status.className = 'fail'
       status.textContent = '⚠️ ' + result.error
@@ -135,6 +168,7 @@ async function onRun() {
     }
   } finally {
     runBtn.disabled = false
+    refreshEmoji()
   }
 }
 
@@ -145,6 +179,7 @@ function onHint() {
     hintIndex++
   }
   if (hintIndex >= lv.hints.length) hintBtn.disabled = true
+  refreshEmoji()
 }
 
 function onNext() {

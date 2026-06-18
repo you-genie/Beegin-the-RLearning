@@ -46,8 +46,9 @@ export const chapter1: Level[] = [
     title: '새 꽃도 가봐야지',
     concept: '탐험 vs 활용 (exploration / exploitation)',
     showDemo:
-      '벌이 처음 마음에 든 꽃만 고집해요. 더 좋은 숨은 꽃이 있는데도 안 가보네요.\n' +
-      '안 가본 꽃을 시도하면 약간의 보너스를 주면 어떨까요?',
+      '꿀 양이 들쭉날쭉해요. 벌이 제일 좋은 꽃을 한 번 뽑았다가 운 나쁘게 적게 나오면, ' +
+      '성급하게 포기하고 그냥 그저 그런 꽃에 눌러앉아 버려요.\n' +
+      '안 가본/적게 가본 꽃을 다시 시도하면 보너스를 줘서, 섣불리 포기하지 않게 해봅시다.',
     codeTemplate: [
       'def reward(obs):',
       '    # obs["nectar"]    : 이번에 모은 꿀',
@@ -62,17 +63,17 @@ export const chapter1: Level[] = [
       env: {
         type: 'bandit',
         arms: [
-          { mean: 0.55, std: 0.1, label: '데이지', emoji: '🌼' },
-          { mean: 0.6, std: 0.1, label: '튤립', emoji: '🌷' },
-          { mean: 0.95, std: 0.1, label: '해바라기', emoji: '🌻' },
+          { mean: 0.5, std: 0.5, label: '데이지', emoji: '🌼' },
+          { mean: 0.6, std: 0.5, label: '튤립', emoji: '🌷' },
+          { mean: 0.9, std: 0.5, label: '해바라기', emoji: '🌻' },
         ],
       },
-      trainSteps: 600, evalSteps: 300, epsilon: 0.02, seed: 1,
+      trainSteps: 100, evalSteps: 300, epsilon: 0.05, seed: 1,
     },
     successThreshold: 0.8,
     hints: [
-      '적게 가본 꽃일수록 보너스를 크게 주면 탐험을 더 해요.',
-      '예:  bonus = 1.0 / (obs["arm_pulls"] + 1)',
+      '꿀 양이 들쭉날쭉해서, 한 번 운 나쁘게 적게 나온 꽃을 벌이 성급하게 포기해요.',
+      '적게 가본 꽃에 보너스를 주면 다시 시도해 봐요:  bonus = 1.0 / (obs["arm_pulls"] + 1)',
     ],
     recap:
       '🎉 이게 강화학습의 영원한 딜레마, "탐험 vs 활용"이에요.\n\n' +

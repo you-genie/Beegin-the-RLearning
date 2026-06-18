@@ -38,6 +38,23 @@ def test_reward_runtime_error_is_caught():
     assert res["error"]
 
 
+def test_exploration_level_needs_bonus():
+    # 챕터 1-2 설정: 노이즈 큰 꽃밭. 보너스 없이는 최고 꽃밭을 성급히 포기해 실패.
+    cfg = {
+        "env": {"type": "bandit", "arms": [
+            {"mean": 0.5, "std": 0.5, "label": "a", "emoji": "x"},
+            {"mean": 0.6, "std": 0.5, "label": "b", "emoji": "x"},
+            {"mean": 0.9, "std": 0.5, "label": "c", "emoji": "x"},
+        ]},
+        "trainSteps": 100, "evalSteps": 300, "epsilon": 0.05, "seed": 1,
+    }
+    plain = run_training("def reward(obs):\n    return obs['nectar']\n", cfg)
+    bonus = run_training(
+        "def reward(obs):\n    return obs['nectar'] + 1.0/(obs['arm_pulls']+1)\n", cfg)
+    assert plain["successRate"] < 0.7
+    assert bonus["successRate"] >= 0.85
+
+
 def test_history_is_recorded():
     src = "def reward(obs):\n    return obs['nectar']\n"
     res = run_training(src, CONFIG)
