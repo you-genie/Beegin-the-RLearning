@@ -6,7 +6,10 @@ import { runTraining, preloadRuntime } from './runtime'
 import { renderBandit, renderBanditInitial } from './renderer'
 import { renderGrid, renderGridInitial } from './grid_renderer'
 import { isCleared } from './scoring'
+import { preloadIcons } from './icons'
 import type { Level } from './types'
+
+preloadIcons(['🐝', '🍯', '🌻', '🌼', '🌷', '🕸️'])
 
 const levels: Level[] = [...chapter1, ...chapter2]
 let current = 0
@@ -17,7 +20,7 @@ const getSpeed = () => speed
 
 const LEGEND: Record<string, string> = {
   grid:
-    '칸 색 = <b>Q값</b>(밝을수록 목표에 가까워 가치가 큼) · 화살표 = <b>정책</b>(그 칸에서 갈 방향) · 숫자 = 그 칸의 Q값',
+    '칸 색 = <b>Q값</b>(밝을수록 목표에 가까워 가치가 큼) · 화살표 = <b>정책</b>(그 칸에서 갈 방향)',
   bandit:
     '막대 높이 = 각 꽃밭의 <b>추정 가치</b>(클수록 좋다고 학습) · 노란 막대 = 진짜 최고 꽃밭',
 }
@@ -27,6 +30,7 @@ const editorPane = $('editor-pane')
 const docsBox = $('docs-box')
 const levelNav = $('level-nav')
 const legend = $('legend')
+const concept = $('concept')
 const canvas = $('canvas') as HTMLCanvasElement
 const status = $('status')
 const hintBox = $('hint-box')
@@ -72,6 +76,7 @@ function loadLevel(index: number) {
   hintBtn.disabled = false
   cancelRender?.()
   $('level-title').textContent = `Lv ${lv.id} — ${lv.title}`
+  concept.textContent = `🎯 ${lv.concept}`
   $('show-panel').textContent = lv.showDemo
   editor.setValue(lv.codeTemplate)
   renderDocs(lv)

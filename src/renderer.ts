@@ -1,4 +1,5 @@
 import type { Level, EngineResult, BanditSnapshot, ArmConfig } from './types'
+import { drawIcon } from './icons'
 
 function drawBanditFrame(
   ctx: CanvasRenderingContext2D,
@@ -28,12 +29,12 @@ function drawBanditFrame(
     }
     ctx.fillRect(x + 12, baseY - h, slot - 24, h)
 
+    const wiggle = isBest ? Math.sin(timeMs / 240) * 3 : 0
+    drawIcon(ctx, arms[a].emoji, x + slot / 2, baseY + 24 + wiggle, 32)
+
     ctx.fillStyle = '#ffffff'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'alphabetic'
-    const wiggle = isBest ? Math.sin(timeMs / 240) * 3 : 0
-    ctx.font = '30px sans-serif'
-    ctx.fillText(arms[a].emoji, x + slot / 2, baseY + 34 + wiggle)
     ctx.font = '13px sans-serif'
     ctx.fillText(arms[a].label, x + slot / 2, baseY + 54)
     ctx.fillText(`추정 ${snap.estimates[a].toFixed(2)}`, x + slot / 2, baseY - h - 18)

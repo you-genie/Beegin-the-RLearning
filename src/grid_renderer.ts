@@ -1,4 +1,5 @@
 import type { Level, EngineResult, GridSnapshot } from './types'
+import { drawIcon } from './icons'
 
 interface Geom { cell: number; ox: number; oy: number; cols: number }
 
@@ -74,19 +75,11 @@ function drawGrid(
       const cy = y + g.cell / 2 - 1
       if (tile === 'H' || tile === 'F' || tile === 'W') {
         // 🌻꽃은 살짝 두근두근 (시각적 생기)
-        const base = g.cell * 0.5
+        const base = g.cell * 0.56
         const size = tile === 'F' ? base * (1 + 0.12 * Math.sin(timeMs / 280)) : base
-        ctx.font = `${Math.floor(size)}px sans-serif`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(tile === 'H' ? '🍯' : tile === 'F' ? '🌻' : '🕸️', cx, cy)
+        drawIcon(ctx, tile === 'H' ? '🍯' : tile === 'F' ? '🌻' : '🕸️', cx, cy, size)
       } else if (tile !== '#' && v > 0.01) {
         drawArrow(ctx, cx, cy, g.cell, snap.policy[r * cols + c])
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
-        ctx.font = `${Math.max(9, Math.floor(g.cell * 0.16))}px ui-monospace, monospace`
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'top'
-        ctx.fillText(v.toFixed(2), x + 4, y + 3)
       }
     }
   }
@@ -98,10 +91,7 @@ function drawGrid(
 }
 
 function drawBee(ctx: CanvasRenderingContext2D, g: Geom, x: number, y: number) {
-  ctx.font = `${Math.floor(g.cell * 0.55)}px sans-serif`
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText('🐝', x, y - 1)
+  drawIcon(ctx, '🐝', x, y - 1, g.cell * 0.62)
 }
 
 function zeroSnap(n: number): GridSnapshot {

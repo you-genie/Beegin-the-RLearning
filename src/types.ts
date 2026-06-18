@@ -70,6 +70,8 @@ export interface Level {
   chapter: number
   sublevel: number
   title: string
+  /** 이 레벨에서 배우는 RL 개념 (짧은 라벨). */
+  concept: string
   showDemo: string
   codeTemplate: string
   engineConfig: EngineConfig

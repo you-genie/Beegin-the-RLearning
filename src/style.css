@@ -3,6 +3,7 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #1e1f29; color
 #topbar { display: flex; gap: 16px; align-items: baseline; padding: 12px 20px; background: #15161e; border-bottom: 1px solid #333; }
 #game-title { font-size: 20px; font-weight: 700; color: #ffcf33; }
 #level-title { font-size: 15px; color: #9fd8ee; }
+#concept { margin-left: auto; font-size: 13px; color: #1e1f29; background: #ffcf33; font-weight: 700; padding: 3px 12px; border-radius: 999px; }
 #level-nav { display: flex; gap: 8px; padding: 10px 20px; background: #191a23; border-bottom: 1px solid #333; }
 .level-btn { background: #2c2f3c; color: #cfd3e0; border: 1px solid #444; border-radius: 999px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
 .level-btn:hover { background: #383c4c; }
@@ -31,5 +32,5 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 #docs-box code { background: #2a2d3a; color: #ffd98a; padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, monospace; }
 #docs-box .docs-desc { color: #b9bdc9; }
 #hint-box { color: #ffe08a; white-space: pre-line; }
-#recap-box { margin-top: 12px; padding: 12px; background: #2a3325; border-radius: 8px; line-height: 1.5; display: none; }
+#recap-box { margin-top: 12px; padding: 12px; background: #2a3325; border-radius: 8px; line-height: 1.6; white-space: pre-line; display: none; }
 #recap-box.show { display: block; }
