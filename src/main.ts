@@ -89,7 +89,8 @@ const navButtons: HTMLButtonElement[] = levels.map((lv, i) => {
 
 function renderDocs(lv: Level) {
   const env = lv.engineConfig.env
-  const fnName = env.type === 'grid' && env.playerFn === 'state' ? 'state' : 'reward'
+  const pf = env.type === 'grid' ? env.playerFn : 'reward'
+  const fnName = pf === 'both' ? 'state · reward' : pf === 'state' ? 'state' : 'reward'
   const rows = lv.docs
     .map(
       (d) =>

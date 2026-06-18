@@ -100,15 +100,16 @@ def _run_grid(player_source, config):
     reward_fn = ns.get("reward")
     state_fn = ns.get("state")
     player_fn = config["env"].get("playerFn", "reward")
-    if player_fn == "reward" and reward_fn is None:
+    if player_fn in ("reward", "both") and reward_fn is None:
         return {**err, "error": "reward(obs) 함수를 정의해주세요."}
-    if player_fn == "state" and state_fn is None:
+    if player_fn in ("state", "both") and state_fn is None:
         return {**err, "error": "state(obs) 함수를 정의해주세요."}
 
     rng = random.Random(config["seed"])
     env = GridWorld(config["env"]["layout"], rng)
     deliver = bool(config["env"].get("deliver", False))
     dmap = env.distance_map()
+    dmap_home = env.distance_map_from(env.home)
     n_actions = env.n_actions
     alpha = config["alpha"]
     gamma = config["gamma"]
@@ -232,6 +233,9 @@ def _run_grid(player_source, config):
                 ncarrying = carrying or (deliver and reached_flower)
                 delivered = deliver and reached_home and carrying
                 done = delivered if deliver else reached_flower
+                # 현재 목표까지의 거리: 배달 중(꿀 보유)이면 집, 아니면 꽃 기준
+                prev_goal = dmap_home if carrying else dmap
+                new_goal = dmap_home if ncarrying else dmap
                 obs = {
                     "reached_flower": reached_flower,
                     "reached_home": reached_home,
@@ -243,6 +247,8 @@ def _run_grid(player_source, config):
                     "steps": t,
                     "dist": dmap[env.cell_index(npos)],
                     "prev_dist": dmap[env.cell_index(pos)],
+                    "dist_goal": new_goal[env.cell_index(npos)],
+                    "prev_dist_goal": prev_goal[env.cell_index(pos)],
                 }
                 r = get_reward(obs)
                 w2 = sample_wind()

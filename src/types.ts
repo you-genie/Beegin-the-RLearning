@@ -16,8 +16,8 @@ export interface GridEnvConfig {
   layout: string[]
   /** true면 꽃을 딴 뒤 집으로 돌아와야 성공(배달). */
   deliver: boolean
-  /** 플레이어가 작성하는 함수. 'reward'(기본) 또는 'state'(상태 설계). */
-  playerFn?: 'reward' | 'state'
+  /** 플레이어가 작성하는 함수. 'reward'(기본) · 'state'(상태 설계) · 'both'(둘 다). */
+  playerFn?: 'reward' | 'state' | 'both'
   /** >0이면 매 스텝 0..K-1 무작위 'noise' 특징을 obs에 추가 (상태 설계 함정용). */
   noiseStates?: number
 }

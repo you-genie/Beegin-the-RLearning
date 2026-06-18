@@ -2,6 +2,7 @@ import type { Level } from '../types'
 
 const MAZE_41 = ['H...', '.##.', '.##.', '...F']
 const MAZE_42 = ['H....', '.###.', '.....', '.###.', '....F']
+const MAZE_43 = ['H.....', '.####.', '.#....', '.#.##.', '.....F']
 
 export const chapter4: Level[] = [
   {
@@ -80,6 +81,54 @@ export const chapter4: Level[] = [
       { key: 'obs["col"]', desc: '지금 있는 칸(가로 위치)' },
       { key: 'obs["noise"]', desc: '매 순간 무작위로 바뀌는 값 (길찾기와 무관!)' },
       { key: 'obs["steps"]', desc: '이번 에피소드에서 움직인 걸음 수' },
+    ],
+  },
+  {
+    id: '4-3', chapter: 4, sublevel: 3,
+    title: '직접 다 설계하기',
+    concept: '상태 + 보상 동시 설계 (종합)',
+    showDemo:
+      '이번엔 상태도, 보상도 둘 다 직접 설계해요! 🍯집에서 멀리 떨어진 🌻꽃까지 가서 ' +
+      '꿀을 따고 다시 집으로 배달해야 해요.\n' +
+      '• 배달을 구분하려면 state에 무엇이 필요할까요?\n' +
+      '• 목표가 멀어서 "도착 보상"만으론 못 배워요 — reward에 길 안내를 깔아주세요.',
+    codeTemplate: [
+      'def state(obs):',
+      '    # 배달하려면 무엇을 봐야 할까요? (4-1을 떠올려요)',
+      '    return (obs["row"], obs["col"])  # TODO',
+      '',
+      '',
+      'def reward(obs):',
+      '    # 목표가 멀어요. 가까워지면 보상을 주세요 (3장의 셰이핑!)',
+      '    #   obs["prev_dist_goal"], obs["dist_goal"] : 현재 목표까지의 거리',
+      '    if obs["delivered"]:',
+      '        return 1.0',
+      '    return 0.0  # TODO',
+      '',
+    ].join('\n'),
+    engineConfig: {
+      env: { type: 'grid', layout: MAZE_43, deliver: true, playerFn: 'both' },
+      alpha: 0.4, gamma: 0.95, epsilon: 0.2,
+      episodes: 300, maxSteps: 60, seed: 0,
+    },
+    successThreshold: 0.8,
+    hints: [
+      'state에는 carrying을, reward에는 거리 셰이핑을 — 둘 다 있어야 풀려요.',
+      'state: return (obs["row"], obs["col"], obs["carrying"])',
+      'reward: 위에 더해서  return 0.1 * (obs["prev_dist_goal"] - obs["dist_goal"])',
+    ],
+    recap:
+      '🎉 상태와 보상을 함께 설계해 배달 임무를 풀었어요!\n\n' +
+      '하나라도 빠지면 안 됐죠 — carrying 없는 상태로는 "꽃 갈 때/집 갈 때"를 못 가리고, ' +
+      '셰이핑 없는 보상으로는 먼 목표를 못 배워요. 둘이 맞물려야 에이전트가 똑똑해져요.\n\n' +
+      'RL 설계는 이렇게 "무엇을 보고(state) · 무엇을 보상할지(reward)"를 함께 맞추는 일이에요. ' +
+      '레벨이 오를수록 직접 설계하는 부분이 점점 늘어나요. 🐝',
+    docs: [
+      { key: 'obs["row"], obs["col"]', desc: '(state) 지금 위치' },
+      { key: 'obs["carrying"]', desc: '(state) 꿀 보유 여부' },
+      { key: 'obs["delivered"]', desc: '(reward) 배달 성공 시 True' },
+      { key: 'obs["dist_goal"]', desc: '(reward) 현재 목표까지 거리 (배달 중이면 집까지)' },
+      { key: 'obs["prev_dist_goal"]', desc: '(reward) 직전 칸의 목표까지 거리' },
     ],
   },
 ]

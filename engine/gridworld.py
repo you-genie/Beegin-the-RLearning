@@ -39,14 +39,18 @@ class GridWorld:
                 if (r, c) not in self.walls]
 
     def distance_map(self):
-        """각 칸에서 꽃까지의 진짜 최단거리(벽 우회 포함)를 BFS로 계산.
-        도달 불가/벽 칸은 큰 값. 보상 셰이핑용."""
+        """각 칸에서 꽃까지의 최단거리. 보상 셰이핑용."""
+        return self.distance_map_from(self.flower)
+
+    def distance_map_from(self, target):
+        """각 칸에서 target까지의 진짜 최단거리(벽 우회 포함)를 BFS로 계산.
+        도달 불가/벽 칸은 큰 값."""
         from collections import deque
         inf = self.n_cells + 1
         dist = [inf] * self.n_cells
-        if self.flower is None:
+        if target is None:
             return dist
-        start = self.flower
+        start = target
         dist[self.cell_index(start)] = 0
         q = deque([start])
         while q:
