@@ -3,7 +3,6 @@ import random
 from engine.bandit import Bandit
 from engine.agent import EpsilonGreedy
 from engine.gridworld import GridWorld
-from engine.q_agent import TabularQ
 
 
 def _make_reward(player_source):
@@ -86,94 +85,135 @@ def _run_bandit(player_source, config):
 
 
 # ---------------------------------------------------------------- grid
-
-def _state_of(env, pos, carrying):
-    """셀 + 꿀 소지 여부를 하나의 상태 인덱스로 인코딩."""
-    return env.cell_index(pos) * 2 + (1 if carrying else 0)
-
-
-def _grid_snapshot(step, env, agent):
-    """carrying=0 슬라이스의 칸별 maxQ와 최적 행동을 기록 (시각화용)."""
-    values = []
-    policy = []
-    for cell in range(env.n_cells):
-        row = agent.q[cell * 2]
-        mx = max(row)
-        best = 0
-        for a in range(env.n_actions):
-            if row[a] > row[best]:
-                best = a
-        values.append(mx)
-        policy.append(best)
-    return {"step": step, "values": values, "policy": policy}
-
-
-def _grid_rollout(env, agent, deliver, max_steps):
-    """집에서 출발해 탐욕적으로 움직인 경로(셀 인덱스 목록). 애니메이션용."""
-    pos = env.home
-    carrying = False
-    path = [env.cell_index(pos)]
-    for _ in range(max_steps):
-        a = agent.greedy(_state_of(env, pos, carrying))
-        npos = env.step_pos(pos, a)
-        if deliver and npos == env.flower:
-            carrying = True
-        path.append(env.cell_index(npos))
-        done = ((deliver and carrying and npos == env.home)
-                or (not deliver and npos == env.flower))
-        pos = npos
-        if done:
-            break
-    return path
-
-
-def _grid_eval(env, agent, deliver, max_steps):
-    """모든 자유 칸(꽃/거미줄 제외)에서 탐욕적으로 출발해 목표 도달 비율.
-    거미줄을 밟고 지나간 경로는 실패로 친다(2-3에서 회피를 강제)."""
-    starts = [p for p in env.free_cells()
-              if p != env.flower and p not in env.webs]
-    if not starts:
-        return 0.0
-    hits = 0
-    for start in starts:
-        pos = start
-        carrying = False
-        touched_web = pos in env.webs
-        reached = False
-        for _ in range(max_steps):
-            a = agent.greedy(_state_of(env, pos, carrying))
-            npos = env.step_pos(pos, a)
-            if npos in env.webs:
-                touched_web = True
-            if deliver and npos == env.flower:
-                carrying = True
-            done = ((deliver and carrying and npos == env.home)
-                    or (not deliver and npos == env.flower))
-            pos = npos
-            if done:
-                reached = True
-                break
-        if reached and not touched_web:
-            hits += 1
-    return hits / len(starts)
-
+#
+# Q테이블을 dict로 두어 상태 키를 자유롭게 쓴다. 챕터 1~3은 reward를, 챕터 4는
+# state(obs)를 플레이어가 작성한다(reward는 엔진 기본값 사용).
 
 def _run_grid(player_source, config):
+    err = {"ok": False, "successRate": 0.0, "history": [], "rollout": []}
     try:
-        reward_fn = _make_reward(player_source)
+        ns = {}
+        exec(player_source, ns)
     except Exception as e:
-        return {"ok": False, "error": "코드 오류: " + str(e),
-                "successRate": 0.0, "history": [], "rollout": []}
+        return {**err, "error": "코드 오류: " + str(e)}
+
+    reward_fn = ns.get("reward")
+    state_fn = ns.get("state")
+    player_fn = config["env"].get("playerFn", "reward")
+    if player_fn == "reward" and reward_fn is None:
+        return {**err, "error": "reward(obs) 함수를 정의해주세요."}
+    if player_fn == "state" and state_fn is None:
+        return {**err, "error": "state(obs) 함수를 정의해주세요."}
 
     rng = random.Random(config["seed"])
     env = GridWorld(config["env"]["layout"], rng)
     deliver = bool(config["env"].get("deliver", False))
     dmap = env.distance_map()
-    agent = TabularQ(env.n_cells * 2, env.n_actions,
-                     config["alpha"], config["gamma"], config["epsilon"], rng)
-
+    n_actions = env.n_actions
+    alpha = config["alpha"]
+    gamma = config["gamma"]
+    epsilon = config["epsilon"]
     episodes = config["episodes"]
     max_steps = config["maxSteps"]
+    noise_k = config["env"].get("noiseStates", 0)  # >0이면 무작위 'wind' 특징 추가
+
+    def sample_wind():
+        return rng.randrange(noise_k) if noise_k else 0
+
+    Q = {}
+
+    def qmax(s):
+        return max((Q.get((s, a), 0.0) for a in range(n_actions)), default=0.0)
+
+    def qbest(s):
+        best, bv = 0, Q.get((s, 0), 0.0)
+        for a in range(n_actions):
+            v = Q.get((s, a), 0.0)
+            if v > bv:
+                bv, best = v, a
+        return best
+
+    def choose(s):
+        if rng.random() < epsilon:
+            return rng.randrange(n_actions)
+        return qbest(s)
+
+    def situation(pos, carrying, steps, wind):
+        sit = {"row": pos[0], "col": pos[1],
+               "carrying": carrying, "steps": steps}
+        if noise_k:
+            sit["noise"] = wind  # 매 스텝 무작위로 바뀌는, 길찾기와 무관한 값
+        return sit
+
+    def get_state(pos, carrying, steps, wind=0):
+        if state_fn is None:
+            return env.cell_index(pos) * 2 + (1 if carrying else 0)
+        return state_fn(situation(pos, carrying, steps, wind))
+
+    def builtin_reward(obs):
+        # 챕터4(상태 설계)용 기본 보상. 보상이 변수가 되지 않도록 충분히 친절하게:
+        # 도달 과제는 거리 셰이핑을 깔아 좋은 상태면 쉽게 배우게 한다.
+        if obs["done"]:
+            return 1.0
+        if not deliver:
+            return 0.1 * (obs["prev_dist"] - obs["dist"])
+        return 0.0
+
+    def get_reward(obs):
+        return float(reward_fn(obs)) if reward_fn is not None else builtin_reward(obs)
+
+    def snapshot(step):
+        values, policy = [], []
+        for cell in range(env.n_cells):
+            pos = (cell // env.cols, cell % env.cols)
+            s = get_state(pos, False, 0)
+            values.append(qmax(s))
+            policy.append(qbest(s))
+        return {"step": step, "values": values, "policy": policy}
+
+    def rollout():
+        pos, carrying = env.home, False
+        path = [env.cell_index(pos)]
+        for t in range(max_steps):
+            a = qbest(get_state(pos, carrying, t, sample_wind()))
+            npos = env.step_pos(pos, a)
+            if deliver and npos == env.flower:
+                carrying = True
+            path.append(env.cell_index(npos))
+            done = ((deliver and carrying and npos == env.home)
+                    or (not deliver and npos == env.flower))
+            pos = npos
+            if done:
+                break
+        return path
+
+    def evaluate():
+        starts = [p for p in env.free_cells()
+                  if p != env.flower and p not in env.webs]
+        if not starts:
+            return 0.0
+        hits = 0
+        for start in starts:
+            pos, carrying = start, False
+            touched_web = pos in env.webs
+            reached = False
+            for t in range(max_steps):
+                a = qbest(get_state(pos, carrying, t, sample_wind()))
+                npos = env.step_pos(pos, a)
+                if npos in env.webs:
+                    touched_web = True
+                if deliver and npos == env.flower:
+                    carrying = True
+                done = ((deliver and carrying and npos == env.home)
+                        or (not deliver and npos == env.flower))
+                pos = npos
+                if done:
+                    reached = True
+                    break
+            if reached and not touched_web:
+                hits += 1
+        return hits / len(starts)
+
     snapshot_every = max(1, episodes // 40)
     history = []
     start_cells = [p for p in env.free_cells() if p != env.flower]
@@ -182,9 +222,10 @@ def _run_grid(player_source, config):
         for ep in range(episodes):
             pos = start_cells[rng.randrange(len(start_cells))]  # 탐험적 시작
             carrying = False
+            w = sample_wind()
             for t in range(max_steps):
-                s = _state_of(env, pos, carrying)
-                a = agent.choose(s)
+                s = get_state(pos, carrying, t, w)
+                a = choose(s)
                 npos = env.step_pos(pos, a)
                 reached_flower = (npos == env.flower)
                 reached_home = (npos == env.home)
@@ -203,22 +244,21 @@ def _run_grid(player_source, config):
                     "dist": dmap[env.cell_index(npos)],
                     "prev_dist": dmap[env.cell_index(pos)],
                 }
-                r = float(reward_fn(obs))
-                ns = _state_of(env, npos, ncarrying)
-                agent.update(s, a, r, ns, done)
+                r = get_reward(obs)
+                w2 = sample_wind()
+                s2 = get_state(npos, ncarrying, t + 1, w2)
+                target = r if done else r + gamma * qmax(s2)
+                Q[(s, a)] = Q.get((s, a), 0.0) + alpha * (target - Q.get((s, a), 0.0))
                 pos = npos
                 carrying = ncarrying
+                w = w2
                 if done:
                     break
             if ep % snapshot_every == 0:
-                history.append(_grid_snapshot(ep, env, agent))
+                history.append(snapshot(ep))
     except Exception as e:
-        return {"ok": False, "error": "reward() 오류: " + str(e),
-                "successRate": 0.0, "history": history, "rollout": []}
+        return {**err, "error": "함수 실행 오류: " + str(e), "history": history}
 
-    history.append(_grid_snapshot(episodes, env, agent))
-    success_rate = _grid_eval(env, agent, deliver, max_steps)
-    rollout = _grid_rollout(env, agent, deliver, max_steps)
-
-    return {"ok": True, "error": None, "successRate": success_rate,
-            "history": history, "rollout": rollout}
+    history.append(snapshot(episodes))
+    return {"ok": True, "error": None, "successRate": evaluate(),
+            "history": history, "rollout": rollout()}

@@ -2,6 +2,7 @@ import './style.css'
 import { chapter1 } from './levels/chapter1'
 import { chapter2 } from './levels/chapter2'
 import { chapter3 } from './levels/chapter3'
+import { chapter4 } from './levels/chapter4'
 import { createEditor } from './monaco'
 import { runTraining, preloadRuntime } from './runtime'
 import { renderBandit, renderBanditInitial } from './renderer'
@@ -12,7 +13,7 @@ import type { Level } from './types'
 
 preloadIcons(['🐝', '🍯', '🌻', '🌼', '🌷', '🕸️'])
 
-const levels: Level[] = [...chapter1, ...chapter2, ...chapter3]
+const levels: Level[] = [...chapter1, ...chapter2, ...chapter3, ...chapter4]
 let current = 0
 let hintIndex = 0
 let cancelRender: (() => void) | null = null
@@ -87,6 +88,8 @@ const navButtons: HTMLButtonElement[] = levels.map((lv, i) => {
 })
 
 function renderDocs(lv: Level) {
+  const env = lv.engineConfig.env
+  const fnName = env.type === 'grid' && env.playerFn === 'state' ? 'state' : 'reward'
   const rows = lv.docs
     .map(
       (d) =>
@@ -94,7 +97,7 @@ function renderDocs(lv: Level) {
     )
     .join('')
   docsBox.innerHTML =
-    `<div class="docs-title">📖 reward(obs) 에서 쓸 수 있는 값</div>${rows}`
+    `<div class="docs-title">📖 ${fnName}(obs) 에서 쓸 수 있는 값</div>${rows}`
 }
 
 function loadLevel(index: number) {
