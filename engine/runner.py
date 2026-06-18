@@ -168,6 +168,7 @@ def _run_grid(player_source, config):
     rng = random.Random(config["seed"])
     env = GridWorld(config["env"]["layout"], rng)
     deliver = bool(config["env"].get("deliver", False))
+    dmap = env.distance_map()
     agent = TabularQ(env.n_cells * 2, env.n_actions,
                      config["alpha"], config["gamma"], config["epsilon"], rng)
 
@@ -199,6 +200,8 @@ def _run_grid(player_source, config):
                     "moved": npos != pos,
                     "done": done,
                     "steps": t,
+                    "dist": dmap[env.cell_index(npos)],
+                    "prev_dist": dmap[env.cell_index(pos)],
                 }
                 r = float(reward_fn(obs))
                 ns = _state_of(env, npos, ncarrying)

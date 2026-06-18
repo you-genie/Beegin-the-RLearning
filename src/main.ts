@@ -1,6 +1,7 @@
 import './style.css'
 import { chapter1 } from './levels/chapter1'
 import { chapter2 } from './levels/chapter2'
+import { chapter3 } from './levels/chapter3'
 import { createEditor } from './monaco'
 import { runTraining, preloadRuntime } from './runtime'
 import { renderBandit, renderBanditInitial } from './renderer'
@@ -11,7 +12,7 @@ import type { Level } from './types'
 
 preloadIcons(['🐝', '🍯', '🌻', '🌼', '🌷', '🕸️'])
 
-const levels: Level[] = [...chapter1, ...chapter2]
+const levels: Level[] = [...chapter1, ...chapter2, ...chapter3]
 let current = 0
 let hintIndex = 0
 let cancelRender: (() => void) | null = null
