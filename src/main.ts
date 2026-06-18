@@ -3,8 +3,8 @@ import { chapter1 } from './levels/chapter1'
 import { chapter2 } from './levels/chapter2'
 import { createEditor } from './monaco'
 import { runTraining, preloadRuntime } from './runtime'
-import { renderBandit } from './renderer'
-import { renderGrid } from './grid_renderer'
+import { renderBandit, renderBanditInitial } from './renderer'
+import { renderGrid, renderGridInitial } from './grid_renderer'
 import { isCleared } from './scoring'
 import type { Level } from './types'
 
@@ -12,11 +12,21 @@ const levels: Level[] = [...chapter1, ...chapter2]
 let current = 0
 let hintIndex = 0
 let cancelRender: (() => void) | null = null
+let speed = 1
+const getSpeed = () => speed
+
+const LEGEND: Record<string, string> = {
+  grid:
+    '칸 색 = <b>Q값</b>(밝을수록 목표에 가까워 가치가 큼) · 화살표 = <b>정책</b>(그 칸에서 갈 방향) · 숫자 = 그 칸의 Q값',
+  bandit:
+    '막대 높이 = 각 꽃밭의 <b>추정 가치</b>(클수록 좋다고 학습) · 노란 막대 = 진짜 최고 꽃밭',
+}
 
 const $ = (id: string) => document.getElementById(id)!
 const editorPane = $('editor-pane')
 const docsBox = $('docs-box')
 const levelNav = $('level-nav')
+const legend = $('legend')
 const canvas = $('canvas') as HTMLCanvasElement
 const status = $('status')
 const hintBox = $('hint-box')
@@ -24,6 +34,13 @@ const recapBox = $('recap-box')
 const runBtn = $('run-btn') as HTMLButtonElement
 const hintBtn = $('hint-btn') as HTMLButtonElement
 const nextBtn = $('next-btn') as HTMLButtonElement
+const speedInput = $('speed') as HTMLInputElement
+const speedVal = $('speed-val')
+
+speedInput.addEventListener('input', () => {
+  speed = parseFloat(speedInput.value)
+  speedVal.textContent = `×${speed.toFixed(2)}`
+})
 
 const editor = createEditor(editorPane, levels[0].codeTemplate)
 
@@ -66,8 +83,12 @@ function loadLevel(index: number) {
   recapBox.textContent = ''
   nextBtn.disabled = true
   nextBtn.textContent = '다음 레벨 →'
-  const ctx = canvas.getContext('2d')!
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  legend.innerHTML = LEGEND[lv.engineConfig.env.type]
+  // 실행 전 0스텝 화면 (빈 상태 + 살랑이는 벌)
+  cancelRender =
+    lv.engineConfig.env.type === 'grid'
+      ? renderGridInitial(canvas, lv)
+      : renderBanditInitial(canvas, lv)
 }
 
 async function onRun() {
@@ -85,8 +106,8 @@ async function onRun() {
     cancelRender?.()
     cancelRender =
       lv.engineConfig.env.type === 'grid'
-        ? renderGrid(canvas, lv, result)
-        : renderBandit(canvas, lv, result)
+        ? renderGrid(canvas, lv, result, getSpeed)
+        : renderBandit(canvas, lv, result, getSpeed)
     const pct = Math.round(result.successRate * 100)
     const threshPct = Math.round(lv.successThreshold * 100)
     if (isCleared(result, lv.successThreshold)) {

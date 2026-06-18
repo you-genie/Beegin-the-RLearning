@@ -26,6 +26,13 @@
         </div>
         <div id="viz-pane">
           <canvas id="canvas" width="520" height="380"></canvas>
+          <div id="legend"></div>
+          <div id="speed-row">
+            <span>🐢</span>
+            <input id="speed" type="range" min="0.25" max="4" step="0.25" value="1" />
+            <span>🐇</span>
+            <span id="speed-val">×1.0</span>
+          </div>
           <div id="status"></div>
           <div id="recap-box"></div>
           <button id="next-btn" disabled>다음 레벨 →</button>
